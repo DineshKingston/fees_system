@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block title %}- Allocate Fees{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Allocate Fees to Students</h2>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#allocateFeeModal">
+        <i class="fas fa-plus"></i> Allocate New Fee
+    </button>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        {% if allocated_fees %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>Roll #</th>
+                        <th>Student Name</th>
+                        <th>Fee Name</th>
+                        <th>Class</th>
+                        <th>Academic Year</th>
+                        <th>Amount (₹)</th>
+                        <th>Due Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for fee in allocated_fees %}
+                    <tr>
+                        <td>{{ fee.roll_number }}</td>
+                        <td>{{ fee.student_name }}</td>
+                        <td>{{ fee.fee_name }}</td>
+                        <td>{{ fee.class }}</td>
+                        <td>{{ fee.academic_year }}</td>
+                        <td>₹{{ fee.amount }}</td>
+                        <td>{{ fee.due_date }}</td>
+                        <td>
+                            {% if fee.status == 'pending' %}
+                            <span class="badge bg-warning">Pending</span>
+                            {% elif fee.status == 'partial' %}
+                            <span class="badge bg-info">Partial</span>
+                            {% else %}
+                            <span class="badge bg-success">Paid</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info">No fees allocated yet. Allocate fees to students!</div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Allocate Fee Modal -->
+<div class="modal fade" id="allocateFeeModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('admin_allocate_fees') }}">
+                <div class="modal-header">
+                    <h5 class="modal-title">Allocate Fee to Student</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Student</label>
+                        <select class="form-select" name="student_id" required>
+                            <option value="">Select Student</option>
+                            {% for student in students %}
+                            <option value="{{ student.id }}">{{ student.roll_number }} - {{ student.full_name }} ({{ student.class }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Fee Structure</label>
+                        <select class="form-select" name="fee_structure_id" required>
+                            <option value="">Select Fee</option>
+                            {% for fee in fee_structures %}
+                            <option value="{{ fee.id }}">{{ fee.category }} - {{ fee.class }} (₹{{ fee.amount }}) - {{ fee.academic_year }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Allocate Fee</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+
+{% block title %}- Payment History{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Payment History</h2>
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">Fee Payment Summary</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-4 mb-3">
+                        <div class="p-3 border rounded bg-light">
+                            <h6>Total Fee Amount</h6>
+                            <h4>₹{{ summary.total_amount or 0 }}</h4>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="p-3 border rounded bg-light">
+                            <h6>Paid Amount</h6>
+                            <h4>₹{{ summary.paid_amount or 0 }}</h4>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="p-3 border rounded bg-light">
+                            <h6>Payment Status</h6>
+                            <div>
+                                <span class="badge bg-success">{{ summary.paid_count or 0 }} Paid</span>
+                                <span class="badge bg-warning ms-1">{{ summary.pending_count or 0 }} Pending</span>
+                                <span class="badge bg-info ms-1">{{ summary.partial_count or 0 }} Partial</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Payment Records</h5>
+        <button class="btn btn-sm btn-light" id="printData">
+            <i class="fas fa-print"></i> Print
+        </button>
+    </div>
+    <div class="card-body">
+        {% if payments %}
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Fee Name</th>
+                        <th>Academic Year</th>
+                        <th>Amount (₹)</th>
+                        <th>Payment Date</th>
+                        <th>Method</th>
+                        <th>Transaction ID</th>
+                        <th>Receipt</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for payment in payments %}
+                    <tr>
+                        <td>{{ payment.fee_name }}</td>
+                        <td>{{ payment.academic_year }}</td>
+                        <td>₹{{ payment.amount }}</td>
+                        <td>{{ payment.payment_date.strftime('%d-%m-%Y %H:%M') }}</td>
+                        <td>{{ payment.payment_method|capitalize }}</td>
+                        <td>{{ payment.transaction_id or '-' }}</td>
+                        <td>
+                            <button class="btn btn-sm btn-secondary print-receipt" data-receipt-id="receipt-{{ payment.id }}">
+                                <i class="fas fa-file-invoice"></i> Receipt
+                            </button>
+                            
+                            <!-- Hidden receipt content -->
+                            <div id="receipt-{{ payment.id }}" style="display: none;">
+                                <div class="card mb-4">
+                                    <div class="card-header">
+                                        <h5>Payment Receipt</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row mb-3">
+                                            <div class="col-6">
+                                                <p><strong>Student Name:</strong> {{ session.full_name }}</p>
+                                                <p><strong>Fee Type:</strong> {{ payment.fee_name }}</p>
+                                                <p><strong>Academic Year:</strong> {{ payment.academic_year }}</p>
+                                            </div>
+                                            <div class="col-6 text-end">
+                                                <p><strong>Payment Date:</strong> {{ payment.payment_date.strftime('%d-%m-%Y %H:%M') }}</p>
+                                                <p><strong>Receipt ID:</strong> RCP-{{ payment.id }}</p>
+                                                <p><strong>Status:</strong> 
+                                                    {% if payment.status == 'paid' %}
+                                                        <span class="badge bg-success">Paid</span>
+                                                    {% elif payment.status == 'partial' %}
+                                                        <span class="badge bg-info">Partial</span>
+                                                    {% endif %}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <hr>
+                                        <div class="row mb-3">
+                                            <div class="col-12">
+                                                <table class="table table-bordered">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Description</th>
+                                                            <th>Amount</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr>
+                                                            <td>{{ payment.fee_name }} ({{ payment.academic_year }})</td>
+                                                            <td>₹{{ payment.amount }}</td>
+                                                        </tr>
+                                                    </tbody>
+                                                    <tfoot>
+                                                        <tr>
+                                                            <th>Total</th>
+                                                            <th>₹{{ payment.amount }}</th>
+                                                        </tr>
+                                                    </tfoot>
+                                                </table>
+                                            </div>
+                                        </div>
+                                        <hr>
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <p><strong>Payment Method:</strong> {{ payment.payment_method|capitalize }}</p>
+                                                {% if payment.transaction_id %}
+                                                <p><strong>Transaction ID:</strong> {{ payment.transaction_id }}</p>
+                                                {% endif %}
+                                            </div>
+                                            <div class="col-6 text-end">
+                                                <p><strong>Authorized Signature</strong></p>
+                                                <br><br>
+                                                <p>__________________</p>
+                                            </div>
+                                        </div>
+                                        {% if payment.notes %}
+                                        <div class="row mt-3">
+                                            <div class="col-12">
+                                                <p><strong>Notes:</strong> {{ payment.notes }}</p>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="card-footer text-center">
+                                        <p class="mb-0">Thank you for your payment!</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i> No payment records found.
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/student.js') }}"></script>
+{% endblock %}

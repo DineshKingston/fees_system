@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+
+{% block title %}- Pay Fees{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Pay Fees</h2>
+
+{% if pending_fees %}
+<div class="card">
+    <div class="card-header bg-info text-white">
+        <h5 class="mb-0">Pending Fees</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Fee Name</th>
+                        <th>Academic Year</th>
+                        <th>Amount (₹)</th>
+                        <th>Due Date</th>
+                        <th>Status</th>
+                        <th>Paid Amount</th>
+                        <th>Remaining</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for fee in pending_fees %}
+                    <tr>
+                        <td>{{ fee.fee_name }}</td>
+                        <td>{{ fee.academic_year }}</td>
+                        <td>₹{{ fee.amount }}</td>
+                        <td>{{ fee.due_date }}</td>
+                        <td>
+                            {% if fee.status == 'pending' %}
+                            <span class="badge bg-warning">Pending</span>
+                            {% elif fee.status == 'partial' %}
+                            <span class="badge bg-info">Partial</span>
+                            {% endif %}
+                        </td>
+                        <td>₹{{ fee.paid_amount }}</td>
+                        <td>₹{{ fee.remaining }}</td>
+                        <td>
+                            <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#paymentModal" 
+                            data-fee-id="{{ fee.id }}" 
+                            data-fee-name="{{ fee.fee_name }}" 
+                            data-amount="{{ fee.remaining }}">
+                                Pay Now
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="alert alert-success">
+    <i class="fas fa-check-circle"></i> No pending fees! You're all caught up.
+</div>
+{% endif %}
+
+<!-- Payment Modal -->
+<div class="modal fade" id="paymentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('student_pay_fees') }}" id="paymentForm">
+                <input type="hidden" name="student_fee_id" id="student_fee_id">
+                <div class="modal-header">
+                    <h5 class="modal-title">Make Payment</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Fee Name</label>
+                        <input type="text" class="form-control" id="fee_name" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Amount (₹)</label>
+                        <input type="number" class="form-control" name="amount" id="amount" step="0.01" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Payment Method</label>
+                        <select class="form-select" name="payment_method" id="payment_method" required>
+                            <option value="cash">Cash</option>
+                            <option value="card">Card</option>
+                            <option value="upi">UPI</option>
+                            <option value="bank_transfer">Bank Transfer</option>
+                        </select>
+                    </div>
+                    <div class="mb-3" id="transaction_id_field">
+                        <label class="form-label">Transaction ID</label>
+                        <input type="text" class="form-control" name="transaction_id" id="transaction_id">
+                        <div class="form-text">Required for card, UPI, and bank transfer payments</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Notes (Optional)</label>
+                        <textarea class="form-control" name="notes" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Submit Payment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/student.js') }}"></script>
+{% endblock %}
